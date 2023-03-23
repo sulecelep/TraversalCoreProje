@@ -1,0 +1,33 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+        <div class="row">
+            @await Component.InvokeAsync("_DashboardBanner")
+            @await Component.InvokeAsync("_Cards1Statistic")
+            <!-- Total Revenue -->
+            @await Component.InvokeAsync("_TotalRevenue")
+            <!--/ Total Revenue -->
+            @await Component.InvokeAsync("_Cards2Statistic")
+        </div>
+        <div class="row">
+            <!-- Order Statistics -->
+            @await Component.InvokeAsync("_DestinationStatistic")
+            <!--/ Order Statistics -->
+            <!-- Expense Overview -->
+            @await Component.InvokeAsync("_DestinationStatistic2")
+            <!--/ Expense Overview -->
+            <!-- Transactions -->
+            @await Component.InvokeAsync("_AdminGuideList")
+
+            <!--/ Transactions -->
+        </div>
+    
+
+
+
+    <div class="content-backdrop fade"></div>
+
+

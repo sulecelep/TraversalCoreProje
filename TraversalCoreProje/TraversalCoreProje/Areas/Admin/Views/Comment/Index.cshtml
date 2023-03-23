@@ -1,0 +1,28 @@
+﻿@using EntityLayer.Concrete
+@model List<Comment>
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Yorum Listesi</h1>
+<table class="table table-bordered">
+    <tr>
+        <th>#</th>
+        <th>Kullanıcı</th>
+        <th>Rota</th>
+        <th>Tarih</th>
+        <th>Sil</th>
+    </tr>
+    @foreach (var item in Model)
+    {
+    <tr>
+        <th>@item.CommentID</th>
+        <th>@item.CommentUser</th>
+        <th>@item.Destination.City</th>
+        <th>@(((DateTime)item.CommentDate).ToString("dd.MMM.yyyy"))</th>
+        <th><a href="/Admin/Comment/DeleteComment/@item.CommentID" class="btn btn-outline-danger">Sil</a></th>
+    </tr>
+    }
+</table>
+

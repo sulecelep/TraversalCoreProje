@@ -1,0 +1,656 @@
+Traversal - 66. video
+1- DTO Katmaný (Data Transfer Object)
+-Solution'a sað týklayýp Add-New Project-Class Library dedikten 
+sonra adýný DTOLayer koyduk. .Net 5.0 seçtikten sonra create ettik.
+-DTOLayer'da DTOs adýnda klasör oluþturduk. DTOs içinde bütün entityler için klasör oluþturcaz.
+-Þimdilik CityDTOs klasörü oluþturarak baþladýk. CityAddDTO classý açýp
+CityClass Modelindeki proplarý buraya kopyaladýk. 
+-DestinationDTOs klasörü oluþturup, DestinationAddDTOs adýnda class açýp 
+DestinationModel'deki proplarý buraya kopyaladýk.
+-MailDTOs klasörü oluþturup, MailRequestDTOs adýnda class açýp 
+Models'deki MailRequest'deki proplarý buraya kopyaladýk.
+
+-AppUserDTOs klasörü oluþturup, AppUserRegisterDTOs adýnda class açýp 
+Models'deki UserRegisterViewModel'deki proplarý buraya kopyaladýk. Ama burada 
+Required compare gibi dataanotationlar olmayacak. Bunlarý Fluent vali. ile 
+çekicez. Aynýsýný bu klasörde AppUserLoginDTOs classý açarak SignIn için de yaptýk.
+
+-DTO katmanýnda tanýmlanan sýnýflar BusinessLayer'da çaðýrýlmalý. Business
+Katmanýna sað týklayýp Add-Project Reference.. deyip DTOLayer'ý tikliyoruz.
+
+-BusinessLayer'da ValidationRule klasörnde AppUserRegisterValidator sýnýfý açtýk
+Normalde T parametresi yerine AppUser yazýyorduk burada DTOs daki sýnýf adýný yazýyoruz.
+public class AppUserRegisterValidator:AbstractValidator<AppUserRegisterDTOs>
+    {
+        public AppUserRegisterValidator()
+        {
+            RuleFor(x => x.Name).NotEmpty().WithMessage("Ad alaný boþ geçilemez.");
+            RuleFor(x => x.Surname).NotEmpty().WithMessage("Soyad alaný boþ geçilemez.");
+            RuleFor(x => x.Mail).NotEmpty().WithMessage("Mail alaný boþ geçilemez.");
+            RuleFor(x => x.Username).NotEmpty().WithMessage("Kullanýcý adý alaný boþ geçilemez.");
+            RuleFor(x => x.Password).NotEmpty().WithMessage("Þifre alaný boþ geçilemez.");
+            RuleFor(x => x.ConfirmPassword).NotEmpty().WithMessage("Þifre tekrar alaný boþ geçilemez.");
+            RuleFor(x => x.Username).MinimumLength(5).WithMessage("Kullanýcý adý en az 5 karakter olmalýdýr.");
+            RuleFor(x => x.Username).MaximumLength(20).WithMessage("Kullanýcý adý en fazla 20 karakter olmalýdýr.");
+            RuleFor(x => x.Password).Equal(y=>y.ConfirmPassword).WithMessage("Þifreler birbiriyle uyuþmuyor.");
+        }
+    }
+
+2- Contact Sayfasýný oluþturma
+Bize yazýn kýsmý olmadýðý için Entity oluþturcaz SQL'de tablo oluþturmak için.
+ContactUs Entitysini oluþturduk.
+Admin'de Controller açtýk ContactUsController. BusinessKatmanýný fln girdik.
+AddScope'larý da verince þimdi controller'a geçebiliriz.
+Entity'de status için prop yazmayý unutmusuz.. 
+ContactUs entitysine gelip propu ekledik. Tabloyu ve entityi kapatýp Migration yaptýk.
+
+
+Traversal - 67. video
+AutoMapper
+-Duyuru yaptýðýmýz bir sýnýf yok Entity'de yeni sýnýf açtýk adý Announcement(Anons) gibi..
+-Migration yaptýk.
+-IAnouncementDal'dan baþlayýp imzalarý attýk.
+-Validation Rule yazdýk.
+-TraversalCore'da Manage Nuget'ten AutoMapper.Extensions.Microsoft.DependencyInjection 12.0.0. sürümünü indirdik
+-UIKatmanýna sað týklayýp Klasör ekliyoruz adý Mapping olacak, Mapping klasörüne
+sað týk AutoMapProfile klasörü oluþturduk, Bu klasöre MapProfile adýnda class açtýk
+Profile sýnýfýný inherit ettik using AutoMapper'ý ekledik.
+Constructor'ýn içine yazdýk:
+public MapProfile()
+        {
+            CreateMap<AnnouncementAddDTOs, Announcement>();
+            CreateMap<Announcement, AnnouncementAddDTOs>();
+
+            CreateMap<AppUserRegisterDTOs, AppUser>();
+            CreateMap<AppUser, AppUserRegisterDTOs>();
+
+            CreateMap<AppUserLoginDTOs, AppUser>();
+            CreateMap<AppUser, AppUserLoginDTOs>();
+
+        }
+
+-Startup'a geçtik 
+services.AddAutoMapper(typeof(Startup));
+services.AddTransient<IValidator<AnnouncementAddDTOs>, AnnouncementValidator>();
+ekledik.
+
+services.AddControllersWithViews(); buna da ekleme yaptýk yeni hali;
+services.AddControllersWithViews().AddFluentValidation();
+
+-Admin'in içindeki modelde model oluþturduk, önce modelle listelicez.
+-@model List<TraversalCoreProje.Areas.Admin.Models.AnnouncementListViewModel>
+Announcement Index'ýnde listelerken modeli bu þekilde belirttik
+
+-Controller bu þekilde:
+public IActionResult Index()
+        {
+            List<Announcement> announcements= _anouncementService.TGetList();   
+            List<AnnouncementListViewModel> model= new List<AnnouncementListViewModel>();   
+            foreach(var item in announcements)
+            {
+                AnnouncementListViewModel announcementListViewModel = new AnnouncementListViewModel();
+                announcementListViewModel.ID = item.AnnouncementID;
+                announcementListViewModel.Title = item.Title;
+                announcementListViewModel.Content=item.Content; 
+                model.Add(announcementListViewModel);
+            }
+            return View(model);
+        }
+
+Traversal - 68.video
+AutoMapper2
+-private readonly IMapper _mapper; bunu da ekledik controllerda
+-bunu ctor'a da ekledik.
+-sonrasýnda DTO'da class açtýk ViewModel'deki proplarý buraya kopyaladýk, ama mutlaka veritabýndaki 
+column adýyla ayný olmalý bunu unutmamalýyýz. Farklýysa deðiþtirelim.
+-Controllera geldik:
+public IActionResult Index()
+        {
+            var values = _mapper.Map<List<AnnouncementListDTO>>(_anouncementService.TGetList());
+            return View(values);
+        }
+-artýk Controllerdaki Index bu þekilde using AutoMapper yaptýk.
+-Index'teki model:
+@model List<DTOLayer.DTOs.AnnouncementDTOs.AnnouncementListDTO>
+artýk bu þekilde deðiþtirildi.
+
+-MapProfile'da:
+CreateMap<AnnouncementListDTO, Announcement>();
+CreateMap<Announcement, AnnouncementListDTO>();
+bunu ekledik.
+
+-Admin'deki ViewImport'a @using DTOLayer.DTOs.AnnouncementDTOs   u ekledik
+-AddAnnouncement sayfasýna artýk model olarak @model AnnouncementAddDto yazabiliriz.
+
+-Extensions'ta metot oluþturduk
+public static void CustomerValidator(this IServiceCollection services)
+        {
+            services.AddTransient<IValidator<AnnouncementAddDto>, AnnouncementValidator>();
+
+        }
+
+-Startup'ta bu metotu çaðýrdýk:
+services.CustomerValidator();
+
+-UpdateAnnouncement sayfasý oluþturduk, burada form metot post iþlemi yapacaðýmýz için dýþarýdan id göndermek için hidden kullanmalýyýz.
+<input type="hidden" asp-for="AnnouncementID" />  
+
+
+Traversal - 69.video
+Api Projesi
+
+-Solution'da new Project dedikten sonra 
+C#-Windows-Web seçiliyken; 
+ASP.NEtCore Web Api'yi seçicez ileri dicez, Katmanýn adýný TraversalApiProject koyduk
+ConfigureforHttps tikini kaldýrdýk .Net 5.0 ile yapcaz. Create ettik.
+-DAL klasörü açtýk.
+-paket hata verirse nuugetten baþka versiona güncelle.
+-DAL klasöründe Context için klasör açtýk burada Database'i oluþturduk.
+-Api katmanýnda return View yerine Return Ok(); döndürdük 200 kodu olan baþarýlý olunca gerçekleþen bir durum, böyle bazý durum returleri var.
+-{
+  "visitorID": 0,
+  "name": "Mahmut",
+  "surname": "Kaya",
+  "city": "Muðla",
+  "country": "Türkiye",
+  "mail": "mahmut@gmail.com"
+}
+bu þekilde post metoduyla veri eklemesi yaptýk
+
+Traversal - 70.video
+Api Projesinin Ana Projede Kullanýlmasý
+-CORS konfidürasyonu yapmamýz gerekiyor.
+-Startup'a geldik Api'nin Startup'ý
+services.AddCors(opt =>
+            {
+                opt.AddPolicy("TraversalApiCors", opts =>
+                {
+                    opts.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                });
+            });
+
+   //Burada AllowAnyOrigin herkesin kullanýmýna açtý,
+   //AllowAnyHeader her türlü dosya türü olabilir json,xml vs
+   //AllowAnyMethod herhangi metotta olabilir. izin verdik.
+
+-Startupta appli kýsýmda autorization'ýn üzerinde bunu belirttik
+app.UseCors("TraversalApiCors");
+
+-Controller'da Route'larýn üzerine 
+[EnableCors] yazdýk.
+
+-Sonra UI katmanýnýn startup'ýna gelip configüre etmemiz gerekecek.
+services.AddHttpClient(); container'ýn üstüne ekledik.
+
+Traversal 71. video
+Rapidapi.com'dan api çekme 
+Rapidapi.com'da üyelik açýp movie arattýktan sonra imdb 100 listesini týkladýk..
+CodeSnippets'da C#+HttpClient'ý seçtik kodu kopyalayýp IActionResult'a yapýþtýrdýktan sonra task async yaptýk metodummuzu.
+Liste olarak bir deðer atamak için model oluþturduk bu modelde proplar apideki çýktýnýn proplarýyla ayný olmalý
+ public async Task<IActionResult> Index() //biz yazdýk
+        {
+            List<ApiMovieViewModel> apiMovies=new List<ApiMovieViewModel>();   //biz yazdýk 
+            var client = new HttpClient();  //rapidapi
+            var request = new HttpRequestMessage //rapidapi
+            {
+                Method = HttpMethod.Get, //rapidapi
+                RequestUri = new Uri("https://imdb-top-100-movies.p.rapidapi.com/"),//rapidapi
+                Headers = 
+                {
+                   { "X-RapidAPI-Key", "85ac5bf4b0msh66d6d2cda60cd98p155845jsn5c2ced510ca5" },
+                   { "X-RapidAPI-Host", "imdb-top-100-movies.p.rapidapi.com" },
+                }, //rapidapi
+            };
+            using (var response = await client.SendAsync(request)) //rapidapi
+            {
+                response.EnsureSuccessStatusCode(); //rapidapi
+                var body = await response.Content.ReadAsStringAsync(); //rapidapi
+                apiMovies=JsonConvert.DeserializeObject<List<ApiMovieViewModel>>(body);  //biz yazdýk 
+                return View(apiMovies);//biz yazdýk
+
+            }
+        }
+
+        Index sayfasýnda table oluþturup modeldeki proplarý çaðýrdýk.
+
+Rapidapi.com'da bu sefer booking diye aratýp Booking.com'u seçtik
+Exchange rates'e týkladýk, Aþaðýda parametre olaran TRY'yi seçtik
+Subscribe toTest'e týkladýktan sonra 0 lirayý seçip Endpoints'e týkladýk
+Tekrar TRY'yi seçtik. Test to Endpoint yaptýk
+C-HttpClient seçtikten sonra ayný iþlemleri yaptýk.
+Controller açtýk her þey diðeriyle aynýydý ama bunu array'den çaðýrdýðýmýz için hata aldýk.
+-Rapidapiye dönüp C#-HttpClient dedikten sonra Test Endpoint yapýp result'taki sonucu kopyalýyoruz.
+-Yeni bir model açýp içine yapýþtýrcaz ama Edit'e basýp Paste Spaecial'dan
+Json class formatýnda yapýþtýrmamýz gerekiyor. Model:
+ public string base_currency { get; set; }
+        public string base_currency_date { get; set; }
+        public Exchange_Rates[] exchange_rates { get; set; }
+        public class Exchange_Rates
+        {
+            public string exchange_rate_buy { get; set; }
+            public string currency { get; set; }
+        }
+Modeldeki Rootobject'in public class kýsmýný siliyoruz sadece içeriði kalýyor nested hatasý veriyor
+Controller'da metodu async Task yapýp kodu yapýþtýrdýktan sonra bu iki satýrý ekliyoruz.
+var values=JsonConvert.DeserializeObject<BookingExchangeViewModelArray>(body);
+return View(values.exchange_rates);
+
+View tarafýnda model belirtirken IEnumerable kullandýk:
+@model IEnumerable<BookingExchangeViewModelArray.Exchange_Rates>
+
+
+Traversal 71. ve 72. video
+Rapid Api Hotel Search
+
+-Controller'da:
+-Rapidapiden aldýðýmýz resultsý Model'de Paste ederken Edit'ten Paste special Json
+formatýnda yapýyoruz.
+Modeldeki Rootobject'in public class kýsmýný siliyoruz sadece içeriði kalýyor nested hatasý veriyor
+
+-Rapidapi den C#-HttpClient yapýp Test Endpoint yaptýktan sonra aldýðýmýz kodu yapýþtýrdýk
+var values = JsonConvert.DeserializeObject<BookingHotelSearchViewModel>(body);
+return View(values.result);
+
+-View'de model belirtirken:
+@model IEnumerable<BookingHotelSearchViewModel.Result>
+
+-sayýlarda ondalýklý deðer olduðu için . kullanýlmýþ bunlarý deðiþtirmemiz gerekti. Controller'da þunu güncelledik:
+                var bodyReplace = body.Replace(".", "");
+                var values = JsonConvert.DeserializeObject<BookingHotelSearchViewModel>(bodyReplace);
+
+bunu yaptýktan sonra View tarafýnda;
+double score;     deðiþkenini yukarýda oluþturduk
+sonra foreach'in içine 
+ @{
+                score = double.Parse(item.review_score.ToString()) / 10;
+            }
+            <td>@score</td>
+
+bu þekilde çektik. 8.6 þeklinde geldi.
+locale=en-gb yerine locale=tr yazarsak Türkçe gelir. Hoca yapmadýðý için
+very good þeklinde deðerlendirmeleri Türkçeleþtirdik. if sorgusu ile td getirdik.
+
+Þimdi þehir parametresi yollayarak Otel sorgulamak istiyoruz:
+Controller'da yeni async Task oluþturduk string parametresi ile bize otel getirecek.
+-Rapidapiye gittik Booking'den Hotels'e gidip SearchLocations'a bastýk Paris yazýp 
+yaptýktan sonta C#-HttpClient yaparak Test Endpoint yaptýk ve çýkan kodu controller'a yapýþtýrdýk
+dýþarýdan gönderdiðimiz p parametresini burada ilgili yere yazacak;
+RequestUri = new Uri($"https://booking-com.p.rapidapi.com/v1/hotels/locations?name={p}&locale=en-gb"),
+
+locale=en-gb yerine locale=tr yazarsak Türkçe gelir.
+
+Traversal 73. ve 74. video
+CQRS Design Patterns
+Yazma ve Okuma olarak ikiye böler.  Okuma iþlemini hýzlandýrmak için oluþturulmuþtur.
+
+Write: Veri tabanýnda deðiþiklik yapan iþlemlerdir.
+Insert - Update - Delete
+
+Read: Veri tabanýna herhangi bir deðiþiklik yansýtýlmaz.
+List - GetByID
+
+Metotlar dört temel yaklaþým vardýr:
+Commands, Handlers, Queries, Results
+Commands: CRUD iþlemleri
+Queries: Sadece sonucu döner. List - GetListByID
+Handlers: Ýþleyici CRUD yapacak
+Results: Listeleme iþlemlerinde parametreleri tutacak sýnýf.
+
+UI Katmanýna gelip Klasör ekledik CQRS adýnda.
+CQRS'e Handlers, Commands, Results, Queries klasörlerini ekledik.
+
+Destination Tablosuna geldik incelicez:
+ÖRNEK;
+1 Muhasebeci: Id Name Stock Alýþ Fiyat Satýþ Fiyat Toplam Fiyat Barkod No
+2 Depo Sorumlusu: Id Name Stok Barkod QRCOde Storage StorageShelf Color Image
+3 Sevkiyat Müdürü: Id Name Stok Barkod QR Image Raf Renk Görsel
+4 Ýnsan Kaynaklarý: Id Name Description
+
+Product Tablosu:
+Id
+Name
+Stock
+PurchasePrice
+SalePrice
+SizeType
+Size
+Description
+Tax
+TotalPrice
+Storage
+StorageShelf
+Supplier
+Image
+Color
+Barcode
+QRCode
+...
+ Bunu Destination için yapcaz.
+
+Results klasörüne: DestinationResults klasörü ekledik.
+DestinationResults: sýnýf açtýk adý GetAllDestinationQueryResult.
+Bu sýnýfa Destination tablosundan istediðimin proplarý yazýcaz ayný isimle
+yazmak zorunda deðiliz.
+
+Queries: klasör ekledik DestinationQueries..
+sýnýf ekledik GetAllDestinationQuery
+Burada parametreler olacak MediaT ekleyince..
+
+Handlers: klasör ekledik DestinationHandlers
+clas ekledik GetAllDestinationQueryHandler
+
+Admin'de DestinationCQRSController açtýk.
+        private readonly GetAllDestinationQueryHandler _queryHandler;
+bunu ctor yaptýk ve Startup'ta bildirmeliyiz:
+            services.AddScoped<GetAllDestinationQueryHandler>();
+
+Admin'in ViewImportsunda
+@using TraversalCoreProje.CQRS.Results.DestinationResults
+ ekledik View'de model olarak eklemek için
+
+Güncelleme iþlemi için ayrý sýnýf açtýk ID'li olan bu dýþarýdan id parametresi alacak ama
+proplarý belirttiðimiz kýlasta generate constructor metodu yapmamýþ lazým id için.
+
+--Özetle Ekleme Silme Güncelleme için Commands'ý kullandýk, Listeleme ve GetByID için Results'ý Kullandýk, 
+Bu yüzden View'lerde proplar için Results ve Commands'dan model alacaðýmýz için ViewImports'da belirttik.
+Handlers'da CRUD ve List metotlarýný yazdýk Business abstract gibi.. Handlers'larý Startup'da Addscoped yaptýk.
+Queries'de Update veya Delete iþlemlerinde id parametresini constructor
+metodu oluþturarak command üzerinden gönderdik.
+
+Traversal 75. video
+MediatR Kütüphanesi
+
+Uçak kulesi gibi düþünücez, her sýnýf haberleþecek.
+UI'a Nugetten ;
+MediatR.Extensions.Microsoft.DependencyInjection 11.0.0 indirdik
+Bu kez MediatR anlatýmý için çalýþacaðýmýz tablo Guides olacak.
+Önceki derste Queries'te sadece id parametresi yollamýþtýk, bu derste
+IRequest interface'i MediatR kütüphanesinden geldi. Köprü olarak Queries'i kullancaz.
+public class GetAllGuideQuery:IRequest<List<GetAllDestinationQueryResult>>
+{....}
+Startup'ta bunu belirtmemiz gerekiyor:
+            services.AddMediatR(typeof(Startup));
+
+MediatR Kütüphanesinden IRequest ve IRequestHandler ile implementasyon yaptýk.
+
+
+Traversal 76. video
+Unit Of Work
+
+Biz bu projede 4 tane design pattern kullandýk;
+Repository
+CQRS
+MEdiatR
+Unit Of Work olacak 4.sü.
+
+Merve Yýldýrým:
+Hesap No: 25635476
+Bakiye: 25 000 TL;
+Ziraat Bankasý Fulya Þubesi
+
+Ezgi Öztürk Yýldýrým:
+Hesap No: 3579485
+Bakiye: 10 000 TL;
+Ziraat Bankasý Sefaköy Þubesi
+
+
+Ýþlemler:
+Merve Ezgi'ye para göndersin.
+Tutar:4500 TL
+Merve: 25000TL
+Eski tutar: 25000-4500
+Yeni Tutar:20500 TL
+Deðiþiklikleri Kaydet
+
+
+Alýcý Hesabý: 672564
+Tutar:4500;
+-------------------------Sistem Gitti
+Merve'nin hesabýndan para çýktý ama Ezgi'nin hesabýnda gözükmüyor.
+
+Unit Of Work burda devreye giriyor.
+Deðiþikliklerin Kaydedilmesi herbir iþlemden sonra deðil 
+bütün iþlemler bittiðinde gerçekleþsin.
+Account Entity'si oluþturduk.
+Dal ve Business metotlarýný oluþturduk. Ayrý ayrý GenericRepository ve diðer
+Genericleri kullandýk ki diðer yapýlarý bozmayalým. 
+void TMultiUpdate(List<T> t);  böyle bir metot yazdýk farklý olarak.
+
+
+Gönderici 
+Alýcý
+Tutar
+Yeni Bakiye Gönderici
+Yeni Bakiye Alýcý 
+
+
+
+Traversal 77. video
+Tasarýmsal Düzenlemeler-1
+
+
+Traversal 78. video
+Tasarýmsal Düzenlemeler-2
+
+Traversal 79. video
+Tasarýmsal Düzenlemeler-3
+
+AppUser tablosuyla Comments tablosunu iliþkilendrmek için
+Truncate table Comments yaptýktan sonra
+Entity'de:
+AppUser'da:
+public List<Comment> Comments { get; set; }
+
+Comment'da:
+public int AppUserID { get; set; }
+public AppUser AppUser { get; set; }
+
+satýrlarýný yazdýktan sonra migration yaptýk.
+
+ICommentDal'da yeni bir metot yazdýk Comment'i User ile beraber getirecek.
+AddComment'in view'inde foreach yapmadan @Model olarak çaðýrdýk.
+Comment tablosunda Image yoktu bunu AppUser'dan çektik.
+EfCommentDal'da AppUser'ý include ettik DestinationID'sini partial'ýn içine 
+yazabilmek için hem destinationController'da hem CommentController'daki
+metotta ViewBag.DestID=id; parametresini girdik ve @await komutuna da 
+bu þekilde çaðýrdýk. Aslýnda sadece CommentController'da ViewBag.i oluþturup
+input type hidden olacak þekilde DestinationID çaðýrýnca da olmuþtu..
+
+Traversal 80. video
+Tasarýmsal Düzenlemeler-4
+
+Destination ve Guide sýnýflarýný iliþkilendircez.
+Destination:
+public int? GuideID { get; set; }   //?koyduk boþ geçilebilsin diye çünkü Destination tablomuz dolu
+public Guide Guide { get; set; }    
+Guide:
+public List<Destination> Destinations { get; set; }
+
+migration yaptýk.
+
+
+Destination sýnýfýna Date parametresi ekleyip tekrar mig yaptýk.
+
+Traversal 81. video
+Tasarýmsal Düzenlemeler-4
+
+Include ederken List metodu kullanýp ToList() diyorduk bu sefer List metodu kullanmadýk
+FirstOrDefault() ile metodu yazdýk.
+
+Traversal 82. video
+Contact Us 
+
+ContactUs'da verileri Dto'dan çektiðimiz için Controller'da IContactUsService 
+dýþýnda mapper'dan da miras almamýz gerekiyor.
+Mapping klasöründe MapProfile var
+CreateMap<SendMessageDto, ContactUs>();
+            CreateMap<ContactUs, SendMessageDto>();
+Mapper'ladýk
+
+Traversal 83. video
+SignalR PostreSQL Veritabaný Eklenmesi
+
+SignalR gerçek zamanlý iþlem gerçekleþtiren yapý, mesajlaþma gibi.. server-client arasý anlýk baðlantý 
+Api sunucu olacak
+Yeni katman ekledik Solution'a gelip New project yapýnca Asp.Net Core Web Api seçtik
+Nugetten Entity paketlerini 5.0.17 olarak indirdik SqlServer olaný indirmedik PostgreSQL kullancaz
+NpgSql aratýp 5.0.16 sürümünü indirdik
+Npgsql.EntityFrameworkCore.PostgreSQL paketinin 5.0.10'u indirdik
+DAL klasörü açtýk Visitor entity sýnýfý oluþturduk
+Context sýnýfý açýp oraya sýnýfý belirttik:
+  public class Context:DbContext
+    {
+        public Context(DbContextOptions<Context> options):base(options)
+        {
+            
+        }
+        public DbSet<Visitor> Visitors { get; set; }    
+    }
+
+Baðlantý adresini appsetting.json'a yazcaz:
+"ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Port=5432;Database=MyVisitDb;User Id=postgres; Password=Password1"
+  },
+
+  Postgresql indirdik.
+Starup'a:
+services.AddEntityFrameworkNpgsql().AddDbContext<Context>(options =>
+            {
+                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"));
+            });
+yazdýk.
+
+SignalRApi'yi seçerek migration yaptýk.
+
+Traversal 84. video
+SignalR  Api Üzerinden Ziyaretçi Veri Seti Oluþturma
+
+Model klasörü oluþturduk
+VisitorChart adýnda sýnýf açtýk
+burada proplarý tanýttýk ve ctor açýp ilgili tarihte þehir kaç kiþi tarafýndan ziyaret
+edilmiþ bunun count'unu tutan veriyi ctor içine aldýk.
+
+
+        public VisitorChart() //ctor
+        {
+            Counts = new List<int>();
+        }
+        public string VisitDate { get; set; }
+        public List<int> Counts { get; set; }
+
+Hubs klasörü açtýk VisitorHub sýnýfý açýp SignalR'ýn Hub sýnýfýný inherit ettik.
+
+public class VisitorHub:Hub
+    {
+        private readonly VisitorService _visitorService;
+
+        public VisitorHub(VisitorService visitorService)
+        {
+            _visitorService = visitorService;
+        }
+        public async Task GetVisitorList()
+        {
+            await Clients.All.SendAsync("CallVisitList", "bbb"); 
+            //"bbb" yerinde _visitorService.GetVisitorChartList() vardý deðiþtirdik
+        }
+    }
+
+
+
+Sorgular için VisitorService adýnda class açtýk:
+public class VisitorService
+    {
+        private readonly Context _context;
+        private readonly IHubContext<VisitorHub> _hubContext;
+
+        public VisitorService(Context context, IHubContext<VisitorHub> hubContext)
+        {
+            _context = context;
+            _hubContext = hubContext;
+        }
+        public IQueryable<Visitor> GetList()
+        {
+            return _context.Visitors.AsQueryable();
+        }
+        public async Task SaveVisitor(Visitor visitor)
+        {
+            await _context.Visitors.AddAsync(visitor);  //visitor parametresinden gelen deðerleri ekle
+            await _context.SaveChangesAsync();          //kaydet
+            await _hubContext.Clients.All.SendAsync("CallVisitorList","aaa"); //SignalR'da çaðýrýlacak metotlar SendAsync ile çaðýrýlýr
+            //"aaa" yerinde GetVisitorChartList vardý postmanda hata alýnca böyle deðiþtirdik
+        }
+        //Ziyaretçileri bir chart olarak getirecek
+        public List<VisitorChart> GetVisitorChartList() 
+        {
+            List<VisitorChart> visitorCharts= new List<VisitorChart>(); 
+            using(var command=_context.Database.GetDbConnection().CreateCommand()) //sorgu komutu oluþturur
+            {
+                command.CommandText = "query sorgu";
+                command.CommandType=System.Data.CommandType.Text; 
+                _context.Database.OpenConnection(); //Database ile baðlantý açýldý
+                using(var reader=command.ExecuteReader()) //Okuyucu
+                {
+                    while (reader.Read()) //okuyucu okudukça
+                    {
+                        VisitorChart visitorChart = new VisitorChart(); 
+                        visitorChart.VisitDate = reader.GetDateTime(0).ToShortDateString();
+                       //Baþlangýç ve bitiþ ECity'den geliyor her biri için;
+                       Enumerable.Range(1, 5).ToList().ForEach(x =>
+                        {
+                            visitorChart.Counts.Add(reader.GetInt32(x));
+                        });
+                        visitorCharts.Add(visitorChart);
+                    }
+                }
+                _context.Database.CloseConnection(); //baðlantý kapandý
+                return visitorCharts;
+            }
+
+        }
+    }
+    
+    Controller Api Controller olacak
+     [HttpGet]
+        public IActionResult CreateVisitor()
+        { 
+            Random random = new Random();
+            Enumerable.Range(1, 10).ToList().ForEach(x =>
+            {
+                foreach (ECity item in Enum.GetValues(typeof(ECity)))
+                {
+                    var newVisitor = new Visitor
+                    {
+                        City = item,
+                        CityVisitCount = random.Next(100, 2000),
+                        VisitDay = DateTime.Now.AddDays(x)  //1 ile 10 arasýnda deðer alacak
+                    };
+                    _visitorService.SaveVisitor(newVisitor).Wait(); //Bunu beklet
+                    System.Threading.Thread.Sleep(1000);            //Saniyede 1 kere bu iþlem gerçekleþecek
+                }
+            });
+            return Ok("Ziyareçiler baþarýlý bir þekilde eklendi.");
+        }
+Postman'de deneme yaptýk, önce Ctrl-F5 yapýp sonrasýnda PostgreSQL'deki tabloya
+baktýðýmýzda eklemeler yapýldý.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

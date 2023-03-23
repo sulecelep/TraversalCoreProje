@@ -1,0 +1,26 @@
+﻿@model AccountViewModel
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Unit OF Work Personel Prim Transferi</h1>
+<form method="post">
+    <div class="form-group">
+    <label>Gönderen</label>
+    <input type="text" asp-for="SenderID" class="form-control" />
+    </div>
+    <br />
+    <div class="form-group">
+        <label>Alıcı</label>
+        <input type="text" asp-for="ReceiverID" class="form-control" />
+    </div>
+    <br />
+    <div class="form-group">
+        <label>Miktar</label>
+        <input type="text" asp-for="Amount" class="form-control" />
+    </div>
+    <br />
+    <button class="btn btn-outline-warning">Hesaba Aktar</button>
+</form>
+

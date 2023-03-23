@@ -1,0 +1,40 @@
+﻿@model List<GetAllGuideQueryResult>
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    int count = 0;
+}
+<style>
+    img {
+        border-radius: 50%;
+    }
+</style>
+
+<h2>CQRS MediatR Rehber Listesi</h2>
+<br />
+<table class="table table-bordered">
+    <tr>
+        <th>#</th>
+        <th>Görsel</th>
+        <th>Rehber Adı</th>
+        <th>Açıklaması</th>
+        <th>Sil</th>
+        <th>Güncelle</th>
+
+    </tr>
+    @foreach (var item in Model)
+    {
+        count++;
+        <tr>
+            <th>@count</th>
+            <td><img src=" @item.Image" height="50" width="50" /></td>
+            <td>@item.Name</td>
+            <td>@item.Description</td>
+            <td><a href="/Admin/GuideMediatR/DeleteGuide/@item.GuideID" class="btn btn-outline-danger">Sil</a></td>
+            <td><a href="/Admin/GuideMediatR/GetGuides/@item.GuideID" class="btn btn-outline-success">Güncelle</a></td>
+        </tr>
+    }
+</table>
+<a href="/Admin/GuideMediatR/AddGuide/" class="btn btn-outline-primary">Rehber Ekle</a>
+
+
