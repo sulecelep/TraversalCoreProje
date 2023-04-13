@@ -41,7 +41,7 @@ Bu proje, tatil rezervasyonu alanında faaliyet gösteren bir web sitesini temsi
 40. Çoklu dil desteği ve şifremi unuttum sayfaları ile kampı tamamladık.
 
 ## Proje Görselleri
-<img src="https://user-images.githubusercontent.com/120751470/231780072-f5d60701-0555-4267-bbe4-adf7cf4a471b.png" width="700">
+<img src="https://user-images.githubusercontent.com/120751470/231780072-f5d60701-0555-4267-bbe4-adf7cf4a471b.png" width="900">
 
 <img src="https://user-images.githubusercontent.com/120751470/231780177-cdcbf275-dd70-4832-ba7d-6024afaf701b.png" width="700">
 
@@ -51,7 +51,7 @@ Bu proje, tatil rezervasyonu alanında faaliyet gösteren bir web sitesini temsi
 
 <img src="https://user-images.githubusercontent.com/120751470/231780394-bcc4eada-bd60-451c-ba2d-07b8a7fdf9a9.png" width="700">
 
-<img src="https://user-images.githubusercontent.com/120751470/231780443-b5431e77-c442-477e-a025-0dc8beac0ef2.png" width="700">
+<img src="https://user-images.githubusercontent.com/120751470/231780443-b5431e77-c442-477e-a025-0dc8beac0ef2.png" width="900">
 
 <img src="https://user-images.githubusercontent.com/120751470/231780513-ecda647c-54cc-4fcc-b169-407b910812f0.png" width="700">
 
@@ -87,10 +87,6 @@ Bu proje, tatil rezervasyonu alanında faaliyet gösteren bir web sitesini temsi
 
 <img src="https://user-images.githubusercontent.com/120751470/231780995-35e45ae6-982d-4217-8659-4baabfa26b5a.png" width="700">
 
-<img src="https://user-images.githubusercontent.com/120751470/231780997-950709a2-300f-407b-9075-e3e5e8bba302.png" width="700">
-
-<img src="https://user-images.githubusercontent.com/120751470/231780999-f4f89f24-ca5e-4d09-8ba4-850a41b8c0d2.png" width="700">
-
 <img src="https://user-images.githubusercontent.com/120751470/231781098-e5e5f35b-257f-4ee9-a859-29480934e5e0.png" width="700">
 
 <img src="https://user-images.githubusercontent.com/120751470/231781102-9b7875d0-e16c-41c2-9c6a-7723b4e389a7.png" width="700">
@@ -98,4 +94,8 @@ Bu proje, tatil rezervasyonu alanında faaliyet gösteren bir web sitesini temsi
 <img src="https://user-images.githubusercontent.com/120751470/231781104-349dd297-539a-4ad5-9eaf-178484b99a66.png" width="700">
 
 <img src="https://user-images.githubusercontent.com/120751470/231781107-aa361e53-4657-4529-8aa8-fe82c2b07c55.png" width="700">
+
+<img src="https://user-images.githubusercontent.com/120751470/231780997-950709a2-300f-407b-9075-e3e5e8bba302.png" width="700">
+
+<img src="https://user-images.githubusercontent.com/120751470/231780999-f4f89f24-ca5e-4d09-8ba4-850a41b8c0d2.png" width="700">
 
