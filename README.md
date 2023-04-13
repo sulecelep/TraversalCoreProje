@@ -75,10 +75,6 @@ Bu proje, tatil rezervasyonu alanında faaliyet gösteren bir web sitesini temsi
 
 <img src="https://user-images.githubusercontent.com/120751470/231780903-b540f70f-c87e-44ad-9551-6f36e1c05c2b.png" width="900">
 
-<img src="https://user-images.githubusercontent.com/120751470/231780904-fb4053ef-d5fc-40d1-92c6-536c0342b71b.png" width="900">
-
-<img src="https://user-images.githubusercontent.com/120751470/231780909-d35dacef-1e68-44a6-8dd6-536e560da692.png" width="900">
-
 <img src="https://user-images.githubusercontent.com/120751470/231780979-85edb55e-1bd8-4b16-b295-6c31bc6c1c4c.png" width="900">
 
 <img src="https://user-images.githubusercontent.com/120751470/231780986-8761ce93-0c6b-4248-b743-7e7e0e1ef304.png" width="900">
