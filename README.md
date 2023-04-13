@@ -98,4 +98,3 @@ Bu proje, tatil rezervasyonu alanında faaliyet gösteren bir web sitesini temsi
 <img src="https://user-images.githubusercontent.com/120751470/231780997-950709a2-300f-407b-9075-e3e5e8bba302.png" width="900">
 
 <img src="https://user-images.githubusercontent.com/120751470/231780999-f4f89f24-ca5e-4d09-8ba4-850a41b8c0d2.png" width="900">
-
