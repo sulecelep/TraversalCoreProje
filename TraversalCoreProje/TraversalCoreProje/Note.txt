@@ -633,18 +633,243 @@ public class VisitorService
 Postman'de deneme yaptýk, önce Ctrl-F5 yapýp sonrasýnda PostgreSQL'deki tabloya
 baktýðýmýzda eklemeler yapýldý.
 
+Traversal 85. video
+CrossTab ile Ziyaretçiler Ýçin Pivot Tablo
+
+https://www.sqlshack.com/how-to-use-the-crosstab-function-in-postgresql/
+Pg Admin'de Visitors sýnýfýna crosstab uygulayacaðýz Öncelikle 
+-- create extension tablefunc;
+yaptýk ve Visitors'un extensions'ýna tablefunc ekledik.
+Sonra:
+
+Select * from
+crosstab('select "VisitDay","City","CityVisitCount" from "Visitors" order by 1,2')
+as ct("VisitDay" TimeStamp,City1 int,City2 int, City3 int,City4 int,City5 int);
+
+Bu sorguda ilk deðer dikey sýralama yapýlacak kolon, ikinci deðer group by gibi yatay sýralama için, üçüncü deðer almak istediðimiz veri. 
+yaptýk ama tarih formatýndan dolayý sadece city1 geldi yanlýþ uygulama oldu.
+Update "Visitors" set "VisitDay"='2023-03-28' where "VisitorID">113 and "VisitorID"<=114
+
+teker teker tarihi güncelleyerek saat kýsmý 00:00:000 olacak hale getirdik ki sýralamayý 
+düzgün yapsýn.
+
+Traversal 86. video
+SignalR Baðlantý Yapýlandýrmasý
+ 
+Visitors tablosunu truncate ettikten sonra Visitors'un üstüne sað týklayýp properties
+e geldikten sonra column'a týkladýk, VisitDay'i VisitDate olarak deðiþtirdik,
+Timestamp'i date olarak deðiþtirip, buradaki Visitors sýnýfýndaki ve
+VisitorController'daki VisitDay'i deðiþtirdik.
+Sonrasýnda SignalRApi seçiliyken CTRL+f5'e týklayýp baþlattýktan sonra postmande çalýþtýrdýk
+tablo geldi, sonrasýnda;
+Select * from
+crosstab('select "VisitDate","City","CityVisitCount" from "Visitors" order by 1,2')
+as ct("VisitDate" date,City1 int,City2 int, City3 int,City4 int,City5 int);
+
+sorun kalmadý..
+
+Bu sorgu önemli bu sorguyu VisitorService'deki query sorgu yazan kýsma yapýþtýrdýk.
+burada çift týrnaklardan bazýlarýný kaldýrdýk.
+
+ command.CommandText = "Select * from crosstab('select VisitDate,City,CityVisitCount from Visitors order by 1,2') as ct(VisitDate date,City1 int,City2 int, City3 int,City4 int,City5 int);";
+
+Solution'da yeni bir proje yani katman eklicez Asp.Net Core Web Application(MVC) seçtik,
+adýný SignalRConsume oldu, Configure for HTTPS yi kaldýrýyoruz create diyoruz.
+
+SignalRApi'nin Startup'a;
+
+services.AddSignalR(); //bu önceden vardý AddCors'u ekledik..
+
+            services.AddCors(options => options.AddPolicy("CorsPolicy",
+                builder =>
+                {
+                    builder.AllowAnyHeader()
+                           .AllowAnyMethod()
+                           .SetIsOriginAllowed((host) => true)
+                           .AllowCredentials();
+                }));
+aþaðýda ;
+            app.UseCors("CorsPolicy"); ////bunu ekliyoruz...
+            
+endpoints kýsmýna ekleme yapcaz;
+ app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHub<VisitorHub>("/VisitorHub");  //bunu ekledik
+            });
+neyi tüketeceðimizi burada belirtiyoruz.
+
+
+Cors'ta server client iliþkisi kuracaðýz.
+server: SignalRApi     //api projesi
+client: SignalRConsume   //mvc projesi
+//Consume üzerinden server'ý tüketicez, Cors sayesinde Cors izin verecek.
+//AllowAnyHeader :dýþarýdan herhangi bir baþlýðýn gelmesine izin ver.
+//AllowAnyMethod : dýþardan herhangi metodun gelmesine izin ver.
+
+SignalRConsume'e signalR paketi eklememiz gerekiyor.
+-katmana sað týkladýk Add-Client-Side Library dedikten sonra;
+provider: nopkg
+library: @microsoft/signalr@5.0.17
+choose spesific files:
+files>dist> browser> signalr.js ve signalr.min.js seçip install ettik.
+wwwroot>lib>microsoft>signalr
+
+Consume'daki Home Index'e;
+
+
+@section Scripts
+{
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(()=>{
+            var connection = new signalR.HubConnectionBuilder().withUrl("http://localhost:3316/VisitorHub").build();
+            $("#connectionStatus").text(connection.connectionState);
+            connection.start().then(()=>{
+                $("#connectionStatus").text(connection.connectionState);
+            }).catch((err)=>{console.log(err)});
+        })
+    </script>
+}
+
+<div class="container">
+    <br />
+    <div class="alert alert-warning">
+        Baðlantýnýzýn durumu: <b id="connectionStatus"></b>
+    </div>
+</div>
+
+yazdýktan sonra baðlantý durumunu kontrol etmek için önce SignalRApi CTRL+F5, sonra
+SignalRConsume CTRL+F5 yaptýk.
+
+
+Traversal 87. video
+SignalR Verilerinin MSSQL'e Taþýnmasý
+
+Asp.NEt Web Api projesi açtýk adýný SignalRApiForSql koyduk.
+Entity paketlerini 5.0.17 olarak indirdik.
+appsettings.json'a connection için;
+    "DefaultConnection": "Data Source=(localdb)\\MSSQLLocalDB;initial catalog=TraversalSignalRDb; integrated security=true",
+
+    Startup'a:
+     services.AddDbContext<Context>(options =>
+            {
+                options.UseSqlServer(Configuration["DefaultConnection"]);
+            });
+Visitors classýný ve Context sýnýfýný SignalRApi'deki gibi ayný yaptýk.
+
+VisitorContoller açtýk Api Controller'ý seçtik.
+
+Traversal 88. video
+ SignalR ile Grafikte Anlýk Veri Görüntüleme
+
+ CrossTab'i MSSQL'de yapcaz.
+
+ Sorgu:
+ Create Procedure SignalRPivot As //Procedure olarak kaydetti
+
+Select tarih,[1],[2],[3],[4],[5] from (select[City], CityVisitCount,
+Cast([VisitDate] as Date) as tarih from Visitors) as visitTable Pivot(Sum(CityVisitCount) 
+For City in([1],[2],[3],[4],[5])) as pivottable order by Tarih asc
+
+Bu sorguyu VisitorService'de yazdýk..
+VisitorService'de deðiþiklik:
+    await _hubContext.Clients.All.SendAsync("CallVisitorList", GetVisitorChartList());
+VisitorHub deðiþiklik:
+    await Clients.All.SendAsync("CallVisitorList", _visitorService.GetVisitorChartList());
+
+//CallVisitorList'leri ReceiveVisitorList yaptýk. 
+Hocanýn gönderdiði scriptte öyleydi.
+
+
+Traversal 89. video
+Rol Listesi ve Rol Ekleme Ýþlemleri
+
+RoleController ekledik Admin'e.
+        private readonly RoleManager<AppRole> _roleManager;
+dedikten sonra generate constractor metodu oluþturduk. 
+CreateRoleViewModel adýnda model oluþturup, AppRole sýnýfý ile eþleþtirdik.
 
 
 
+Traversal 90. video
+Rol Silme Rol Düzenleme ve Area Route Ayarlarý
+
+
+Traversal 91. video
+Rolleri listeleme
+
+
+Traversal 92. video
+Rol Atama
+
+Bir post View'e birden fazla parametreyi ayný Model'den alacaksak List<Model> model þeklinde model parametresini
+tanýmlayacaðýz.
+UserManager'dan kullanýcýnýn id'sini taþýmak için TempData komutu var;
+Get'te bunu; TempData["Userid"]= user.Id;   //ViewBag gibi düþün
+Postta: var userid= (int)TempData["userid"];
 
 
 
+Traversal 93. video
+Member Dashboard Düzenlemeler
+ 
+Last Destinations'u Dashboard Index üzerinden component olarak düzenledik.
+Son 4 Rotayý Mimariye Uygun Getirmek Ýçin;
+
+Dal Abstract IDestinationDal;
+        public List<Destination> GetLast4Destinations();
+
+Dal EF EfDestinationDal;
+implement edip içine
+using (var c = new Context())
+            {
+                var values = c.Destinations.Take(4).OrderByDescending(x => x.DestinationID).ToList();
+                return values;
+            }
+
+Business Abstract IDestinationService:
+        public List<Destination> TGetLast4Destinations();
+
+Business Concrete DestinationManager:
+implement edip
+            return _destinationDal.GetLast4Destinations();  
+yazdýk.
 
 
 
+Traversal 94.ve 95. video
+Member tema deðiþikliðine gittik
+
+soft-ui-dashboard'dan Chameleon admin template'ini kullanarak
+member'a geçtik..
 
 
 
+Traversal 96.video
+Çoklu Dil Desteði
+Startup'a yukarýda bunu
+ services.AddLocalization(opt =>
+            {
+                opt.ResourcesPath = "Resources";
+            });
+            services.AddMvc().AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix).AddDataAnnotationsLocalization();
+
+
+aþaðýda bunu yazdýk.
+var supportedCultures = new[] { "en", "fr", "es", "gr", "tr", "de" };
+            var localizationOptions=new RequestLocalizationOptions().SetDefaultCulture(supportedCultures[4])
+                .AddSupportedCultures(supportedCultures)
+                .AddSupportedUICultures(supportedCultures);
+            app.UseRequestLocalization(localizationOptions);
+
+
+UI Katmaýnda Resources adýnda klasör açtýk, Ana Controller'da InformationContoller açtýk,
+Ana Controller'da olmasý önemli, Sonra Index'i MemberLayout kullanarak açtýk.
+Resources klasörünün içine Views klasörü açtýk, onun içine de Controller'ýn adýnda yani
+Information klasörünü açtýk.
+Information'a sað týklayým Add-New Item dedikten sonra Resurces file'ý seçiyoruz. Adýný
+Ýngilizce'yi tutsun diye Index.en.resx koyduk .resx uzantý bu arada...
 
 
 

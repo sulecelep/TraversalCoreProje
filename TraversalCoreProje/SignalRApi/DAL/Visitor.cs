@@ -15,6 +15,6 @@ namespace SignalRApi.DAL
         public int VisitorID { get; set; }
         public ECity City { get; set; }
         public int CityVisitCount { get; set; }
-        public DateTime VisitDay { get; set; }
+        public DateTime VisitDate { get; set; }
     }
 }
