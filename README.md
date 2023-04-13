@@ -41,6 +41,8 @@ Bu proje, tatil rezervasyonu alanında faaliyet gösteren bir web sitesini temsi
 40. Çoklu dil desteği ve şifremi unuttum sayfaları ile kampı tamamladık.
 
 ## Proje Görselleri
+<img src="https://user-images.githubusercontent.com/120751470/231780072-f5d60701-0555-4267-bbe4-adf7cf4a471b.png" width="500">
+
 ![Resim1](https://user-images.githubusercontent.com/120751470/231780072-f5d60701-0555-4267-bbe4-adf7cf4a471b.png)
 ![Resim2](https://user-images.githubusercontent.com/120751470/231780177-cdcbf275-dd70-4832-ba7d-6024afaf701b.png)
 ![Resim3](https://user-images.githubusercontent.com/120751470/231780235-ca9a0430-5b5b-4384-a6df-0cd94d8c2a2e.png)
