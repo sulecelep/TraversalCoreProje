@@ -51,7 +51,7 @@ namespace TraversalCoreProje.Controllers
             mimeMessage.Subject = "Şifre Değişiklik Talebi";
             SmtpClient client = new SmtpClient();
             client.Connect("smtp.gmail.com", 587, false);
-            client.Authenticate("traversalcore1907@gmail.com", "mklziqcvfnpaisgu");
+            client.Authenticate("traversalcore1907@gmail.com", "aaaa");
             client.Send(mimeMessage);
             client.Disconnect(true);
 
